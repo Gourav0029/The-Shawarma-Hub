@@ -18,6 +18,7 @@ class NavBar extends StatefulWidget {
 class _NavBarState extends State<NavBar> {
   final storage = GetStorage();
   String tokens = '';
+  String name = '';
 
   Future<void> getAvailableToken() async {
     String phoneNumber = storage.read('phone');
@@ -46,11 +47,11 @@ class _NavBarState extends State<NavBar> {
   void initState() {
     super.initState();
     getAvailableToken();
+    name = storage.read('name');
   }
 
   @override
   Widget build(BuildContext context) {
-    //getAvailableToken();
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -66,7 +67,7 @@ class _NavBarState extends State<NavBar> {
                   // Align the account name to the baseline
                   children: [
                     Text(
-                      'Gourav',
+                      name,
                       style: GoogleFonts.outfit(
                         fontSize: 18,
                         color: const Color(0xFFFFFFFF),
