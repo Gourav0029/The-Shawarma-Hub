@@ -6,6 +6,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/helper/cart_helper.dart';
+import 'package:the_shawarma_hub/model/cart_items_model.dart';
 import 'package:the_shawarma_hub/model/menu_items_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -19,6 +21,7 @@ class Menu extends StatefulWidget {
 class _MenuState extends State<Menu> {
   List<MenuItems> menuItems = [];
   bool isLoading = true;
+  final dbHelper = CartDatabaseHelper();
 
   @override
   void initState() {
@@ -211,11 +214,22 @@ class _MenuState extends State<Menu> {
                                                       if (itemCount.value > 0) {
                                                         return CustomCartStepper(
                                                           itemCount: itemCount,
+                                                          item: items,
                                                         );
                                                       } else {
                                                         return InkWell(
-                                                          onTap: () {
+                                                          onTap: () async {
                                                             itemCount.value++;
+
+                                                            CartItem cartItem =
+                                                                CartItem
+                                                                    .fromMenuItem(
+                                                                        items,
+                                                                        1);
+
+                                                            await dbHelper
+                                                                .insertOrUpdateCartItem(
+                                                                    cartItem);
                                                           },
                                                           child: Container(
                                                             padding:
@@ -329,8 +343,10 @@ class _MenuState extends State<Menu> {
 
 class CustomCartStepper extends StatefulWidget {
   final RxInt itemCount;
+  final MenuItems item;
 
-  const CustomCartStepper({required this.itemCount, super.key});
+  const CustomCartStepper(
+      {required this.itemCount, required this.item, super.key});
 
   @override
   State<CustomCartStepper> createState() => _CustomCartStepperState();
@@ -338,23 +354,39 @@ class CustomCartStepper extends StatefulWidget {
 
 class _CustomCartStepperState extends State<CustomCartStepper> {
   final storage = GetStorage();
+  final dbHelper = CartDatabaseHelper();
+
+  void updateCartItem(int quantity) async {
+    if (quantity > 0) {
+      CartItem cartItem = CartItem.fromMenuItem(widget.item, quantity);
+      await dbHelper.insertOrUpdateCartItem(cartItem);
+    } else {
+      await dbHelper.deleteCartItem(widget.item.itemId!);
+    }
+  }
 
   //final controller = Get.put(MedicineSearchController());
 
   @override
   void initState() {
     super.initState();
+    updateCartItem(widget.itemCount.value);
   }
 
   increment() {
     widget.itemCount.value++;
-    setState(() {});
+    setState(() {
+      updateCartItem(widget.itemCount.value);
+    });
   }
 
-  decrement() {
+  decrement() async {
     setState(() {
       if (widget.itemCount > 0) {
         widget.itemCount.value--;
+        updateCartItem(widget.itemCount.value);
+      } else {
+        updateCartItem(widget.itemCount.value);
       }
     });
   }
