@@ -288,6 +288,7 @@ class _CartState extends State<Cart> {
                           // RxInt itemCount = (items.quantity ?? 0).obs;
                           log("Building item: ${items.name}");
                           return Padding(
+                            key: ValueKey(items.itemId),
                             padding: const EdgeInsets.all(8.0),
                             child: Container(
                               width: screenWidth,
@@ -400,9 +401,16 @@ class _CartState extends State<Cart> {
                                                   ),
                                                   const Spacer(),
                                                   CustomCartStepper(
-                                                      // itemCount: itemCount,
-                                                      item: items,
-                                                      onUpdate: fetchCartItems)
+                                                    // itemCount: itemCount,
+                                                    item: items,
+                                                    onUpdate: fetchCartItems,
+                                                    onItemRemoved: () {
+                                                      setState(() {
+                                                        cartItems
+                                                            .removeAt(index);
+                                                      });
+                                                    },
+                                                  )
                                                 ],
                                               ),
                                               const SizedBox(height: 8),
@@ -624,9 +632,13 @@ class CustomCartStepper extends StatefulWidget {
   //final RxInt itemCount;
   final CartItem item;
   final VoidCallback onUpdate;
+  final VoidCallback onItemRemoved;
 
   const CustomCartStepper(
-      {required this.item, required this.onUpdate, super.key});
+      {required this.item,
+      required this.onUpdate,
+      required this.onItemRemoved,
+      super.key});
 
   @override
   State<CustomCartStepper> createState() => _CustomCartStepperState();
@@ -645,6 +657,7 @@ class _CustomCartStepperState extends State<CustomCartStepper> {
           .insertOrUpdateCartItem(widget.item.copyWith(quantity: quantity));
     } else {
       await dbHelper.deleteCartItem(widget.item.itemId!);
+      widget.onItemRemoved();
     }
     widget.onUpdate(); // Trigger the callback to refresh the parent
   }
