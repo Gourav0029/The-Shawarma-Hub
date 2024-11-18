@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:the_shawarma_hub/helper/cart_helper.dart';
+import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
 import 'package:the_shawarma_hub/model/menu_items_model.dart';
 import 'package:http/http.dart' as http;

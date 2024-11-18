@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/helper/logout_helper.dart';
 import 'package:the_shawarma_hub/sidebar/manage_address.dart';
 import 'package:http/http.dart' as http;
 
@@ -226,6 +227,7 @@ class _NavBarState extends State<NavBar> {
 }
 
 Future<void> showSignOutDialog(BuildContext context) async {
+  final helper = LogoutHelper();
   return showDialog<void>(
     context: context,
     builder: (BuildContext context) {
@@ -264,6 +266,8 @@ Future<void> showSignOutDialog(BuildContext context) async {
               // ); // Close the dialog
 
               //logout();
+
+              helper.logout();
             },
             child: Text(
               'Sign Out',

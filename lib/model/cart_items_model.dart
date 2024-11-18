@@ -21,6 +21,29 @@ class CartItem {
     required this.quantity,
   });
 
+  // Add this copyWith method
+  CartItem copyWith({
+    String? itemId,
+    String? name,
+    String? description,
+    int? price,
+    String? category,
+    String? photo,
+    String? subCategory,
+    int? quantity,
+  }) {
+    return CartItem(
+      itemId: itemId ?? this.itemId,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      category: category ?? this.category,
+      photo: photo ?? this.photo,
+      subCategory: subCategory ?? this.subCategory,
+      quantity: quantity ?? this.quantity,
+    );
+  }
+
   Map<String, dynamic> toMap() {
     return {
       'item_id': itemId,

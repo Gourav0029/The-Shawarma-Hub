@@ -55,10 +55,9 @@ class CartDatabaseHelper {
 
     if (maps.isNotEmpty) {
       // Item already exists in the cart, update the quantity
-      int currentQuantity = maps.first['quantity'];
       await db.update(
         'cart_items',
-        {'quantity': currentQuantity + cartItem.quantity!},
+        {'quantity': cartItem.quantity}, // Use the passed quantity directly
         where: 'item_id = ?',
         whereArgs: [cartItem.itemId],
       );
@@ -93,6 +92,7 @@ class CartDatabaseHelper {
     });
   }
 
+  // Delete Item from database
   Future<void> deleteCartItem(String itemId) async {
     final db = await database;
     await db.delete(
@@ -102,5 +102,13 @@ class CartDatabaseHelper {
     );
 
     log('Deletion done from database!!!');
+  }
+
+  //! clear all the Items in the database called when user log out
+  Future<void> clearDatabase() async {
+    final db = await database;
+    await db.delete('cart_items'); // Replace 'cart_items' with your table name
+    // Add additional tables if needed
+    log('All data cleared from SQLite database');
   }
 }
