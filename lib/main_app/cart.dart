@@ -7,6 +7,7 @@ import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
+import 'package:the_shawarma_hub/main_app/order_completion.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
 
 class Cart extends StatefulWidget {
@@ -725,7 +726,11 @@ class _CartState extends State<Cart> {
               ),
               const SizedBox(height: 20),
               InkWell(
-                onTap: () async {},
+                onTap: () {
+                  cartItems.isNotEmpty
+                      ? Get.to(() => const PaymentCompletion())
+                      : () {};
+                },
                 child: Container(
                   height: 50,
                   width: screenWidth,
