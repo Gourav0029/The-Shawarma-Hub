@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/helper/location_helper.dart';
 import 'package:the_shawarma_hub/main_app/cart.dart';
 import 'package:the_shawarma_hub/main_app/home.dart';
 import 'package:the_shawarma_hub/main_app/menu.dart';
 import 'package:the_shawarma_hub/sidebar/navbar.dart';
+import 'package:badges/badges.dart' as badges;
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -24,11 +26,14 @@ class _LandingPageState extends State<LandingPage> {
     const Cart(),
   ];
   Position? currentposition;
+  final CartController cartController = Get.put(CartController());
+  final RxInt cartItemCount = 0.obs;
 
   @override
   void initState() {
     super.initState();
     locationHelper.initLocation();
+    //_loadCartItemCount();
   }
 
   @override
@@ -102,13 +107,26 @@ class _LandingPageState extends State<LandingPage> {
                 ),
                 label: 'Menu'),
             BottomNavigationBarItem(
-                icon: Icon(
-                  Icons.shopping_cart_outlined,
-                  color: _currentIndex == 2
-                      ? const Color(0xFFE23744)
-                      : Colors.grey,
-                ),
-                label: 'Cart'),
+              icon: Obx(() {
+                // Wrap the badge with Obx for real-time updates
+                return badges.Badge(
+                  badgeContent: Text(
+                    cartController.cartItemCount.value.toString(),
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                  showBadge: cartController.cartItemCount.value >
+                      0, // Only show if count > 0
+                  position: badges.BadgePosition.topEnd(top: -10, end: -12),
+                  child: Icon(
+                    Icons.shopping_cart,
+                    color: _currentIndex == 2
+                        ? const Color(0xFFE23744)
+                        : Colors.grey,
+                  ),
+                );
+              }),
+              label: 'Cart',
+            ),
           ],
           onTap: (index) {
             setState(() {

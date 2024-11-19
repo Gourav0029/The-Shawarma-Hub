@@ -6,6 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
 import 'package:the_shawarma_hub/model/menu_items_model.dart';
@@ -23,10 +24,21 @@ class _MenuState extends State<Menu> {
   bool isLoading = true;
   final dbHelper = CartDatabaseHelper();
 
+  final Map<String?, RxInt> itemCounts = {};
+  final CartController cartController = Get.find<CartController>();
   @override
   void initState() {
     super.initState();
     getAllMenuItems();
+    //initializeItemCounts();
+  }
+
+  Future<void> initializeItemCounts() async {
+    // Wait for all counts to be fetched
+    await Future.wait(menuItems.map((item) async {
+      int count = await dbHelper.getItemCount(item.itemId!);
+      itemCounts[item.itemId!] = count.obs; // Initialize with stored count
+    }));
   }
 
   String convertToDirectLink(String driveLink) {
@@ -58,9 +70,10 @@ class _MenuState extends State<Menu> {
       if (response.statusCode == 200) {
         List<dynamic> jsonResponse = json.decode(response.body);
         log('Response: ${response.body}');
+        menuItems =
+            jsonResponse.map((item) => MenuItems.fromJson(item)).toList();
+        await initializeItemCounts();
         setState(() {
-          menuItems =
-              jsonResponse.map((item) => MenuItems.fromJson(item)).toList();
           isLoading = false;
         });
       } else {
@@ -69,6 +82,9 @@ class _MenuState extends State<Menu> {
       }
     } catch (e) {
       debugPrint('Error: $e');
+      setState(() {
+        isLoading = false; // Avoid infinite loader
+      });
     }
   }
 
@@ -76,6 +92,15 @@ class _MenuState extends State<Menu> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     //double screenHeight = MediaQuery.of(context).size.height;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // Additional safety: Ensure itemCounts is fully initialized
+    if (menuItems.isEmpty || itemCounts.isEmpty) {
+      return const Center(child: Text("No menu items available."));
+    }
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -91,8 +116,11 @@ class _MenuState extends State<Menu> {
                             MenuItems items = menuItems[index];
                             String directImageLink =
                                 convertToDirectLink(items.photo!);
-                            RxInt itemCount = 0.obs;
+                            // Retrieve the `itemCount` for this item
+                            RxInt itemCount =
+                                itemCounts[items.itemId!] ?? 0.obs;
                             return Padding(
+                              key: ValueKey(items.itemId),
                               padding: const EdgeInsets.all(8.0),
                               child: Container(
                                 width: screenWidth,
@@ -230,6 +258,9 @@ class _MenuState extends State<Menu> {
                                                             await dbHelper
                                                                 .insertOrUpdateCartItem(
                                                                     cartItem);
+
+                                                            await cartController
+                                                                .updateCartItemCount();
                                                           },
                                                           child: Container(
                                                             padding:
@@ -355,13 +386,16 @@ class CustomCartStepper extends StatefulWidget {
 class _CustomCartStepperState extends State<CustomCartStepper> {
   final storage = GetStorage();
   final dbHelper = CartDatabaseHelper();
+  final CartController cartController = Get.find<CartController>();
 
   void updateCartItem(int quantity) async {
     if (quantity > 0) {
       CartItem cartItem = CartItem.fromMenuItem(widget.item, quantity);
       await dbHelper.insertOrUpdateCartItem(cartItem);
+      await cartController.updateCartItemCount();
     } else {
       await dbHelper.deleteCartItem(widget.item.itemId!);
+      await cartController.updateCartItemCount();
     }
   }
 

@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
+import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/login/login.dart';
 
 Future<void> main() async {
   await dotenv.load();
   await GetStorage.init();
+  Get.put(CartController());
   runApp(const MyApp());
 }
 

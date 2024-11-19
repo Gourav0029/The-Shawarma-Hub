@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
 
@@ -19,13 +20,30 @@ class _CartState extends State<Cart> {
   List<dynamic> deliveryAddressList = [1, 2, 3];
   List<CartItem> cartItems = [];
   final dbHelper = CartDatabaseHelper();
+  final storage = GetStorage();
+  String name = 'username';
+  String phone = '';
+  double token = 0.0;
+  bool isProcessing = false;
 
   double totalPrice = 0.0;
+  bool useTokens = false;
 
   @override
   void initState() {
     super.initState();
     fetchCartItems();
+    loadDetails();
+  }
+
+  void loadDetails() {
+    name = storage.read('name') ??
+        'default_name'; // Provide a default value in case the data is missing
+    phone = storage.read('phone') ?? 'default_phone';
+    token = storage.read('tokens') ?? 0.0;
+    setState(() {});
+
+    debugPrint('Loaded name: $name, phone: $phone, token: $token');
   }
 
   Future<void> fetchCartItems() async {
@@ -51,6 +69,11 @@ class _CartState extends State<Cart> {
     setState(() {
       totalPrice = total;
     });
+  }
+
+  double getFinalPrice() {
+    // If useTokens is true, subtract the available tokens from the total price
+    return useTokens ? totalPrice - token : totalPrice;
   }
 
   String convertToDirectLink(String driveLink) {
@@ -85,6 +108,65 @@ class _CartState extends State<Cart> {
         child: SingleChildScrollView(
           child: Column(
             children: [
+              Container(
+                width: screenWidth,
+                padding: const EdgeInsets.all(16.0),
+                //margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFFFFF),
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE23744).withOpacity(0.14),
+                      offset: const Offset(4, 6),
+                      blurRadius: 16,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Ordering for:",
+                      style: GoogleFonts.outfit(
+                        fontSize: 18,
+                        color: const Color(0xFF201135),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Name: $name",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: const Color(0xFF201135),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Phone Number: $phone",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: const Color(0xFF201135),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      "Available tokens: $token",
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: const Color(0xFF201135),
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
               deliveryAddressList.isNotEmpty
                   ? Container(
                       width: screenWidth,
@@ -95,7 +177,7 @@ class _CartState extends State<Cart> {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF7219F7).withOpacity(0.14),
+                            color: const Color(0xFFE23744).withOpacity(0.14),
                             offset: const Offset(4, 6),
                             blurRadius: 16,
                             spreadRadius: 0,
@@ -555,7 +637,7 @@ class _CartState extends State<Cart> {
                         ),
                         const Spacer(),
                         Text(
-                          '-Rs. 10',
+                          '-Rs. ${useTokens ? token : 0}',
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: const Color(0xFF107025),
@@ -608,7 +690,7 @@ class _CartState extends State<Cart> {
                         ),
                         const Spacer(),
                         Text(
-                          'Rs. $totalPrice',
+                          'Rs. ${getFinalPrice()}',
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: const Color(0xFF201135),
@@ -617,7 +699,77 @@ class _CartState extends State<Cart> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Checkbox(
+                          value: useTokens,
+                          onChanged: (bool? value) {
+                            setState(() {
+                              useTokens = value ?? false;
+                            });
+                          },
+                        ),
+                        Text(
+                          'Use available tokens: $token',
+                          style: GoogleFonts.outfit(
+                            fontSize: 14,
+                            color: const Color(0xFF201135),
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              InkWell(
+                onTap: () async {},
+                child: Container(
+                  height: 50,
+                  width: screenWidth,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    gradient: cartItems.isEmpty
+                        ? const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFFB0BEC5),
+                              Color(0xFFCFD8DC)
+                            ], // Grey colors when cart is empty
+                          )
+                        : const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Color(0xFFCB202D),
+                              Color(0xFFE23744)
+                            ], // Original color when cart is not empty
+                          ),
+                  ),
+                  child: isProcessing
+                      ? const Center(
+                          child: SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                              )),
+                        )
+                      : Text(
+                          'Place Order',
+                          textAlign: TextAlign.center,
+                          style: GoogleFonts.outfit(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: cartItems.isEmpty || isProcessing
+                                  ? Colors
+                                      .white // Grey text when disabled or processing
+                                  : Colors.white),
+                        ),
                 ),
               )
             ],
@@ -647,6 +799,7 @@ class CustomCartStepper extends StatefulWidget {
 class _CustomCartStepperState extends State<CustomCartStepper> {
   final storage = GetStorage();
   final dbHelper = CartDatabaseHelper();
+  final CartController cartController = Get.find<CartController>();
 
   late RxInt itemCount;
 
@@ -655,8 +808,10 @@ class _CustomCartStepperState extends State<CustomCartStepper> {
       // Update the cart item in the database
       await dbHelper
           .insertOrUpdateCartItem(widget.item.copyWith(quantity: quantity));
+      await cartController.updateCartItemCount();
     } else {
       await dbHelper.deleteCartItem(widget.item.itemId!);
+      await cartController.updateCartItemCount();
       widget.onItemRemoved();
     }
     widget.onUpdate(); // Trigger the callback to refresh the parent

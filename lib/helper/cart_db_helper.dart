@@ -111,4 +111,28 @@ class CartDatabaseHelper {
     // Add additional tables if needed
     log('All data cleared from SQLite database');
   }
+
+  Future<int> getItemCount(String itemId) async {
+    final db = await database;
+    final result = await db.query(
+      'cart_items',
+      where: 'item_id = ?',
+      whereArgs: [itemId],
+      limit: 1,
+    );
+    if (result.isNotEmpty) {
+      return result.first['quantity'] as int;
+    }
+    return 0; // Default value
+  }
+
+  Future<int> getCartItemCount() async {
+    final db = await database; // Ensure the database is initialized
+    final result =
+        await db.rawQuery('SELECT SUM(quantity) as total FROM cart_items');
+    if (result.isNotEmpty && result.first['total'] != null) {
+      return result.first['total'] as int; // Return the sum of quantities
+    }
+    return 0; // Default value if no rows found
+  }
 }
