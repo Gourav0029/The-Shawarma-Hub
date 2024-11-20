@@ -3,7 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:the_shawarma_hub/controller/cart_controller.dart';
-import 'package:the_shawarma_hub/login/login.dart';
+import 'package:the_shawarma_hub/login/splash.dart';
 
 Future<void> main() async {
   await dotenv.load();
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE23744)),
         useMaterial3: true,
       ),
-      home: const LoginPage(),
+      home: SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
