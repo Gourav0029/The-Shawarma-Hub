@@ -179,32 +179,32 @@ class _NavBarState extends State<NavBar> {
               // Get.to(() => FAQPage());
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.help),
-            title: Text(
-              'Grievance',
-              style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: const Color(0xFF201135),
-                  fontWeight: FontWeight.w500),
-            ),
-            onTap: () {
-              //Get.to(() => const GrievancePage());
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.feedback_outlined),
-            title: Text(
-              'Feedback',
-              style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: const Color(0xFF201135),
-                  fontWeight: FontWeight.w500),
-            ),
-            onTap: () {
-              //Get.to(() => const FeedbackPage());
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.help),
+          //   title: Text(
+          //     'Grievance',
+          //     style: GoogleFonts.outfit(
+          //         fontSize: 14,
+          //         color: const Color(0xFF201135),
+          //         fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     //Get.to(() => const GrievancePage());
+          //   },
+          // ),
+          // ListTile(
+          //   leading: const Icon(Icons.feedback_outlined),
+          //   title: Text(
+          //     'Feedback',
+          //     style: GoogleFonts.outfit(
+          //         fontSize: 14,
+          //         color: const Color(0xFF201135),
+          //         fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     //Get.to(() => const FeedbackPage());
+          //   },
+          // ),
           ListTile(
             leading: const Icon(Icons.logout_rounded),
             title: Text(

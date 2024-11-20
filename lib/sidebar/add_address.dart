@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/helper/address_db_helper.dart';
 
 class AddDeliveryAddress extends StatefulWidget {
   const AddDeliveryAddress({super.key});
@@ -33,6 +34,18 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
         cityController.text.isNotEmpty &&
         addressLine1Controller.text.isNotEmpty &&
         addressLine2Controller.text.isNotEmpty;
+  }
+
+  String combineAddressFields() {
+    return
+        // "${fullNameController.text}, " // Full Name
+        //     "${mobileNumberController.text}, " // Mobile Number
+        "${addressLine1Controller.text}, " // Address Line 1
+            "${addressLine2Controller.text}, " // Address Line 2
+            "${landmarkController.text.isNotEmpty ? "${landmarkController.text}, " : ""}" // Landmark (if provided)
+            "${cityController.text}, " // City
+            "${stateController.text}, " // State
+            "Pin: ${pincodeController.text}"; // Pincode
   }
 
   @override
@@ -186,20 +199,34 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
             const SizedBox(height: 12),
             InkWell(
               onTap: () async {
-                // Handle onTap action
                 if (allFieldsFilled) {
-                  // addDeliveryAddress(
-                  //     fullNameController,
-                  //     mobileNumberController,
-                  //     pincodeController,
-                  //     stateController,
-                  //     cityController,
-                  //     addressLine1Controller,
-                  //     addressLine2Controller,
-                  //     addressTypeSave);
+                  String userId = storage.read(
+                      'userId'); // Replace with your method to fetch userId.
 
-                  // Get.back(result: true);
-                } else {}
+                  int id = await AddressDatabaseHelper().saveAddress(
+                    userId: userId,
+                    fullName: fullNameController.text,
+                    mobileNumber: mobileNumberController.text,
+                    addressLine1: addressLine1Controller.text,
+                    addressLine2: addressLine2Controller.text,
+                    landmark: landmarkController.text.isNotEmpty
+                        ? landmarkController.text
+                        : null,
+                    city: cityController.text,
+                    state: stateController.text,
+                    pincode: pincodeController.text,
+                    addressType: addressTypeSave,
+                  );
+
+                  if (id > 0) {
+                    Get.snackbar('Success', 'Address saved successfully!');
+                    Get.back(); // Navigate back after saving
+                  } else {
+                    Get.snackbar('Error', 'Failed to save address!');
+                  }
+                } else {
+                  Get.snackbar('Error', 'Please fill all required fields.');
+                }
               },
               child: Container(
                 width: screenWidth,
