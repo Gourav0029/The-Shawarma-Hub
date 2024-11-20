@@ -9,6 +9,7 @@ import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
 import 'package:the_shawarma_hub/main_app/order_completion.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
+import 'package:the_shawarma_hub/sidebar/change_address.dart';
 
 class Cart extends StatefulWidget {
   const Cart({super.key});
@@ -30,11 +31,24 @@ class _CartState extends State<Cart> {
   double totalPrice = 0.0;
   bool useTokens = false;
 
+  Map<String, dynamic>? _selectedAddress;
+
+  // Load the selected address from storage
+  void _loadSelectedAddress() {
+    var selectedAddress = storage.read('selectedAddress');
+
+    log(selectedAddress.toString());
+    setState(() {
+      _selectedAddress = selectedAddress;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     fetchCartItems();
     loadDetails();
+    _loadSelectedAddress();
   }
 
   void loadDetails() {
@@ -98,8 +112,33 @@ class _CartState extends State<Cart> {
     }
   }
 
+  // Function to show the popup
+  void _showDeliveryChargeInfo(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delivery Charges Information'),
+          content: const Text(
+            'Delivery charges will be applicable if the order is placed outside of the 3km radius of the store.',
+            style: TextStyle(fontSize: 14),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+              },
+              child: const Text('Close'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    //final selectedAddress = storage.read('selectedAddress');
     double screenWidth = MediaQuery.of(context).size.width;
     //double screenHeight = MediaQuery.of(context).size.height;
     return Scaffold(
@@ -202,21 +241,10 @@ class _CartState extends State<Cart> {
                               const Spacer(),
                               InkWell(
                                 onTap: () async {
-                                  // Get.to(() => const ChangeAddress());
-                                  // Navigate to the change address page and await the result
-                                  // final newIndex = await Get.to<int>(
-                                  //     () => const ChangeAddress());
-                                  // if (newIndex != null &&
-                                  //     newIndex != selectedAddressIndex) {
-                                  //   // Update selected address index and trigger UI refresh
-                                  //   setState(() {
-                                  //     selectedAddressIndex = newIndex;
-                                  //     storage.write('selectedAddressIndex',
-                                  //         selectedAddressIndex);
-                                  //     refreshDeliveryAddress();
-                                  //   });
-                                  //   setState(() {});
-                                  // }
+                                  // Navigate to ChangeAddressPage
+                                  await Get.to(() => const ChangeAddressPage());
+                                  // After returning from ChangeAddressPage, reload the address
+                                  _loadSelectedAddress();
                                 },
                                 child: Container(
                                   padding:
@@ -239,7 +267,7 @@ class _CartState extends State<Cart> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Gourav',
+                            _selectedAddress?['fullName'] ?? 'N/A',
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               color: const Color(0xFF201135),
@@ -248,7 +276,7 @@ class _CartState extends State<Cart> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Sample address',
+                            '${_selectedAddress?['addressLine1']}, ${_selectedAddress?['addressLine2']}, ${_selectedAddress?['landmark'] ?? ''}, ${_selectedAddress?['city']} - ${_selectedAddress?['pincode']}',
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               color: const Color(0xFF201135),
@@ -257,7 +285,7 @@ class _CartState extends State<Cart> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Mobile Number: 7488850519',
+                            _selectedAddress?['mobileNumber'] ?? 'N/A',
                             style: GoogleFonts.outfit(
                               fontSize: 14,
                               color: const Color(0xFF201135),
@@ -650,7 +678,7 @@ class _CartState extends State<Cart> {
                     const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           'Delivery Charge:',
@@ -659,6 +687,18 @@ class _CartState extends State<Cart> {
                             color: const Color(0xFF201135),
                             fontWeight: FontWeight.w400,
                           ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.info_outline,
+                            //size: 14,
+                            color: Color(
+                                0xFFC14141), // Optional: Set the color of the icon
+                          ),
+                          onPressed: () {
+                            // Show the popup with the message
+                            _showDeliveryChargeInfo(context);
+                          },
                         ),
                         const Spacer(),
                         Text(
