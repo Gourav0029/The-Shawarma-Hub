@@ -20,8 +20,9 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    name = storage.read('name');
-    log(name);
+    name = storage.read('name') ?? '';
+    log(name.toString());
+    setState(() {});
   }
 
   @override
