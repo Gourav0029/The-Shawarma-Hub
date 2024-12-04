@@ -1,7 +1,9 @@
+import 'dart:convert';
 import 'dart:developer';
 
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,6 +12,7 @@ import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
 import 'package:the_shawarma_hub/main_app/order_completion.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
 import 'package:the_shawarma_hub/sidebar/change_address.dart';
+import 'package:http/http.dart' as http;
 
 class Cart extends StatefulWidget {
   const Cart({super.key});
@@ -55,7 +58,7 @@ class _CartState extends State<Cart> {
     name = storage.read('name') ??
         'default_name'; // Provide a default value in case the data is missing
     phone = storage.read('phone') ?? 'default_phone';
-    token = storage.read('tokens') ?? 0.0;
+    token = double.tryParse(storage.read('tokens')?.toString() ?? '0.0') ?? 0.0;
     setState(() {});
 
     debugPrint('Loaded name: $name, phone: $phone, token: $token');
@@ -134,6 +137,105 @@ class _CartState extends State<Cart> {
         );
       },
     );
+  }
+
+  Future<void> createOrder() async {
+    setState(() {
+      isProcessing = true;
+    });
+
+    String userId = storage.read('userId') ?? '';
+    String userName = storage.read('name') ?? '';
+    String phoneNumber = storage.read('phone') ?? '';
+
+    if (userId.isEmpty || userName.isEmpty || phoneNumber.isEmpty) {
+      log('User details are missing');
+      setState(() {
+        isProcessing = false;
+      });
+      return;
+    }
+
+    Map<String, int> itemsWithQuantity = {};
+    for (var item in cartItems) {
+      if (item.name != null && item.quantity != null) {
+        itemsWithQuantity[item.name!] = item.quantity!;
+      }
+    }
+
+    double finalPrice = getFinalPrice();
+
+    String apiUrl = '${dotenv.get('API_URL')}/shawarmahouse/v1/createOrder';
+
+    final requestBody = {
+      'userId': userId,
+      'userName': userName,
+      'phoneNumber': phoneNumber,
+      'itemsWithQuantity': itemsWithQuantity,
+      'totalAmount': finalPrice,
+      'tokens': useTokens ? token : 0.0,
+    };
+
+    log('Request Body: $requestBody');
+
+    try {
+      final response = await http.post(Uri.parse(apiUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(requestBody));
+
+      log('Response: ${response.statusCode}');
+
+      if (response.statusCode == 201) {
+        log(response.body);
+
+        await updateToken();
+      } else {
+        throw Exception(
+            'Failed to place order. Response: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    } finally {
+      setState(() {
+        isProcessing = false;
+      });
+    }
+  }
+
+  Future<void> updateToken() async {
+    String apiUrl = '${dotenv.get('API_URL')}/shawarmahouse/v1/update';
+
+    double finalPrice = getFinalPrice();
+
+    final requestBody = {
+      'phoneNumber': phone,
+      'totalAmount': finalPrice,
+      'useTokens': useTokens
+    };
+
+    log('Resquest Body: $requestBody');
+
+    try {
+      final response = await http.put(Uri.parse(apiUrl),
+          headers: {'Content-Type': 'application/json'},
+          body: json.encode(requestBody));
+
+      log(response.statusCode.toString());
+
+      if (response.statusCode == 200) {
+        log(response.body);
+        final Map<String, dynamic> jsonResponse = json.decode(response.body);
+        final double tokens = jsonResponse['tokens'];
+        storage.write('tokens', tokens);
+        await dbHelper.clearDatabase();
+        Get.to(() => const PaymentCompletion());
+      } else {
+        throw Exception(
+            'Error updating token!! Response: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    }
   }
 
   @override
@@ -766,9 +868,10 @@ class _CartState extends State<Cart> {
               ),
               const SizedBox(height: 20),
               InkWell(
-                onTap: () {
+                onTap: () async {
                   cartItems.isNotEmpty
-                      ? Get.to(() => const PaymentCompletion())
+                      ? await createOrder()
+                      // Get.to(() => const PaymentCompletion())
                       : () {};
                 },
                 child: Container(

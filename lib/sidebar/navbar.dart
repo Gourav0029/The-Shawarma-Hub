@@ -34,6 +34,8 @@ class _NavBarState extends State<NavBar> {
           tokens = response.body;
         });
 
+        storage.write('tokens', tokens);
+
         debugPrint('Available Tokens: $tokens');
       } else {
         throw Exception(

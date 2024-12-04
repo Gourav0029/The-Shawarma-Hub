@@ -1,8 +1,13 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/main_app/landing_page.dart';
+import 'package:http/http.dart' as http;
 
 class PaymentCompletion extends StatefulWidget {
   const PaymentCompletion({super.key});
@@ -14,17 +19,56 @@ class PaymentCompletion extends StatefulWidget {
 class _PaymentCompletionState extends State<PaymentCompletion> {
   final storage = GetStorage();
 
+  String name = 'username';
+  String phone = '';
+  String token = '0.0';
+  bool isLoading = true;
+  Map<String, dynamic>? address;
+
   @override
   void initState() {
     super.initState();
-    loadData();
+    getAvailableToken();
+    address = storage.read('selectedAddress');
   }
 
-  loadData() async {}
+  Future<void> getAvailableToken() async {
+    name = storage.read('name') ?? 'default_name';
+    phone = storage.read('phone') ?? 'default_phone';
+    String apiUrl =
+        '${dotenv.get('API_URL')}/shawarmahouse/v1/gettokens?phoneNumber=$phone';
+    try {
+      final response = await http.get(Uri.parse(apiUrl));
+      log(response.statusCode.toString());
+      if (response.statusCode == 200) {
+        log(response.body);
+        setState(() {
+          token = response.body;
+        });
+
+        storage.write('tokens', token);
+
+        debugPrint('Available Tokens: $token');
+      } else {
+        throw Exception(
+            'Failed to load Available tokens. Response: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('Error: $e');
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
+
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4F0F9),
@@ -94,7 +138,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Test',
+                          name,
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             color: const Color(0xFF201135),
@@ -119,7 +163,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'test phone',
+                          phone,
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             color: const Color(0xFF201135),
@@ -169,7 +213,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Test',
+                          address?['fullName'],
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             color: const Color(0xFF201135),
@@ -195,7 +239,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
-                            'Test Address',
+                            ' ${address?['addressLine1']}, ${address?['addressLine2']}, ${address?['landmark'] ?? ''} ',
                             softWrap: true,
                             maxLines: 3,
                             overflow: TextOverflow.ellipsis,
@@ -224,7 +268,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'phone number',
+                          address?['mobileNumber'],
                           style: GoogleFonts.outfit(
                             fontSize: 12,
                             color: const Color(0xFF201135),
@@ -247,7 +291,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           Text(
-                            'Expected Delivery by:',
+                            'Available Tokens:',
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               color: const Color(0xFF857B94),
@@ -256,7 +300,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            'April 1, 2024',
+                            token,
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               color: const Color(0xFF201135),
@@ -273,6 +317,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
               InkWell(
                 onTap: () {
                   // Handle onTap action
+                  Get.find<CartController>().updateCartItemCount();
                   Get.offAll(() => const LandingPage());
                 },
                 child: Container(
