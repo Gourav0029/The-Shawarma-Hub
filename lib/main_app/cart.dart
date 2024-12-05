@@ -8,6 +8,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:the_shawarma_hub/controller/cart_controller.dart';
+import 'package:the_shawarma_hub/helper/address_db_helper.dart';
 import 'package:the_shawarma_hub/helper/cart_db_helper.dart';
 import 'package:the_shawarma_hub/main_app/order_completion.dart';
 import 'package:the_shawarma_hub/model/cart_items_model.dart';
@@ -36,14 +37,28 @@ class _CartState extends State<Cart> {
 
   Map<String, dynamic>? _selectedAddress;
 
-  // Load the selected address from storage
-  void _loadSelectedAddress() {
-    var selectedAddress = storage.read('selectedAddress');
+  void _loadSelectedAddress() async {
+    try {
+      var selectedAddress = storage.read('selectedAddress');
+      log('Explicitly selected address: $selectedAddress');
 
-    log(selectedAddress.toString());
-    setState(() {
-      _selectedAddress = selectedAddress;
-    });
+      if (selectedAddress == null) {
+        final dbHelper = AddressDatabaseHelper();
+        var lastSavedAddress = await dbHelper.getLastSavedAddress();
+        log('Fallback to last saved address: $lastSavedAddress');
+
+        setState(() {
+          _selectedAddress = lastSavedAddress ?? {}; // Fallback to empty map
+        });
+      } else {
+        setState(() {
+          _selectedAddress = selectedAddress;
+        });
+      }
+      log('Final selected address: $_selectedAddress');
+    } catch (e) {
+      log('Error in _loadSelectedAddress: $e');
+    }
   }
 
   @override
@@ -90,8 +105,9 @@ class _CartState extends State<Cart> {
   }
 
   double getFinalPrice() {
-    // If useTokens is true, subtract the available tokens from the total price
-    return useTokens ? totalPrice - token : totalPrice;
+    // Use only the tokens up to the total price
+    double discount = useTokens ? (totalPrice < token ? totalPrice : token) : 0;
+    return totalPrice - discount;
   }
 
   String convertToDirectLink(String driveLink) {
@@ -309,7 +325,7 @@ class _CartState extends State<Cart> {
                 ),
               ),
               const SizedBox(height: 12),
-              deliveryAddressList.isNotEmpty
+              _selectedAddress != null && _selectedAddress!.isNotEmpty
                   ? Container(
                       width: screenWidth,
                       //height: double.infinity,
@@ -768,7 +784,7 @@ class _CartState extends State<Cart> {
                         ),
                         const Spacer(),
                         Text(
-                          '-Rs. ${useTokens ? token : 0}',
+                          '-Rs. ${useTokens ? (totalPrice < token ? totalPrice : token) : 0}',
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: const Color(0xFF107025),
@@ -854,7 +870,7 @@ class _CartState extends State<Cart> {
                           },
                         ),
                         Text(
-                          'Use available tokens: $token',
+                          'Use tokens: ${useTokens ? (totalPrice < token ? totalPrice : token) : token}',
                           style: GoogleFonts.outfit(
                             fontSize: 14,
                             color: const Color(0xFF201135),
@@ -869,10 +885,21 @@ class _CartState extends State<Cart> {
               const SizedBox(height: 20),
               InkWell(
                 onTap: () async {
-                  cartItems.isNotEmpty
-                      ? await createOrder()
-                      // Get.to(() => const PaymentCompletion())
-                      : () {};
+                  if (cartItems.isNotEmpty) {
+                    log(_selectedAddress.toString());
+                    if (_selectedAddress?['fullName'] != 'N/A') {
+                      await createOrder();
+                    } else {
+                      // Show a snackbar prompting the user to add an address
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                              "Please add a delivery address to place the order."),
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  }
                 },
                 child: Container(
                   height: 50,

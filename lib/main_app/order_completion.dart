@@ -102,6 +102,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                 ),
               ),
               const SizedBox(height: 44),
+              // Customer Information
               Container(
                 width: screenWidth,
                 height: screenWidth <= 400 ? 120 : 140,
@@ -153,7 +154,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         SizedBox(
                           width: 60,
                           child: Text(
-                            'phone:',
+                            'Phone:',
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               color: const Color(0xFF201135),
@@ -172,151 +173,147 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
                   ],
                 ),
               ),
               const SizedBox(height: 12),
-              Container(
-                width: screenWidth,
-                //height: screenWidth <= 400 ? 120 : 140,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.white,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Delivery Details:',
-                      style: GoogleFonts.outfit(
-                        fontSize: 16,
-                        color: const Color(0xFF201135),
-                        fontWeight: FontWeight.w600,
+              // Conditional rendering for delivery or dine-in
+              if (address != null) ...[
+                // Delivery Details
+                Container(
+                  width: screenWidth,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Delivery Details:',
+                        style: GoogleFonts.outfit(
+                          fontSize: 16,
+                          color: const Color(0xFF201135),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            'Name:',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: const Color(0xFF201135),
-                              fontWeight: FontWeight.w500,
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 60,
+                            child: Text(
+                              'Name:',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: const Color(0xFF201135),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          address?['fullName'],
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: const Color(0xFF201135),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            'Address:',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: const Color(0xFF201135),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            ' ${address?['addressLine1']}, ${address?['addressLine2']}, ${address?['landmark'] ?? ''} ',
-                            softWrap: true,
-                            maxLines: 3,
-                            overflow: TextOverflow.ellipsis,
+                          const SizedBox(width: 4),
+                          Text(
+                            address?['fullName'] ?? '',
                             style: GoogleFonts.outfit(
                               fontSize: 12,
                               color: const Color(0xFF201135),
                               fontWeight: FontWeight.w400,
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        SizedBox(
-                          width: 60,
-                          child: Text(
-                            'Mobile:',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: const Color(0xFF201135),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          address?['mobileNumber'],
-                          style: GoogleFonts.outfit(
-                            fontSize: 12,
-                            color: const Color(0xFF201135),
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      width: screenWidth,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 4),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4),
-                        color: const Color(0xFFEAE1F7),
+                        ],
                       ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
+                      const SizedBox(height: 4),
+                      Row(
                         children: [
-                          Text(
-                            'Available Tokens:',
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: const Color(0xFF857B94),
-                              fontWeight: FontWeight.w500,
+                          SizedBox(
+                            width: 60,
+                            child: Text(
+                              'Address:',
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: const Color(0xFF201135),
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            token,
-                            style: GoogleFonts.outfit(
-                              fontSize: 12,
-                              color: const Color(0xFF201135),
-                              fontWeight: FontWeight.w600,
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              '${address?['addressLine1']}, ${address?['addressLine2']}, ${address?['landmark'] ?? ''}',
+                              softWrap: true,
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.outfit(
+                                fontSize: 12,
+                                color: const Color(0xFF201135),
+                                fontWeight: FontWeight.w400,
+                              ),
                             ),
                           ),
                         ],
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                // Dine-In Message
+                Container(
+                  width: screenWidth,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    color: Colors.white,
+                  ),
+                  child: Text(
+                    'Thank you for choosing dine-in, please sit back and relax while we prepare your order.',
+                    style: GoogleFonts.outfit(
+                      fontSize: 14,
+                      color: const Color(0xFF201135),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              // Available Tokens
+              Container(
+                width: screenWidth,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: const Color(0xFFEAE1F7),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Available Tokens:',
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: const Color(0xFF857B94),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      token,
+                      style: GoogleFonts.outfit(
+                        fontSize: 12,
+                        color: const Color(0xFF201135),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 24),
+              // Go Back to Home Button
               InkWell(
                 onTap: () {
-                  // Handle onTap action
                   Get.find<CartController>().updateCartItemCount();
                   Get.offAll(() => const LandingPage());
                 },

@@ -37,15 +37,79 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
   }
 
   String combineAddressFields() {
-    return
-        // "${fullNameController.text}, " // Full Name
-        //     "${mobileNumberController.text}, " // Mobile Number
-        "${addressLine1Controller.text}, " // Address Line 1
-            "${addressLine2Controller.text}, " // Address Line 2
-            "${landmarkController.text.isNotEmpty ? "${landmarkController.text}, " : ""}" // Landmark (if provided)
-            "${cityController.text}, " // City
-            "${stateController.text}, " // State
-            "Pin: ${pincodeController.text}"; // Pincode
+    return "${addressLine1Controller.text}, " // Address Line 1
+        "${addressLine2Controller.text}, " // Address Line 2
+        "${landmarkController.text.isNotEmpty ? "${landmarkController.text}, " : ""}" // Landmark (if provided)
+        "${cityController.text}, " // City
+        "${stateController.text}, " // State
+        "Pin: ${pincodeController.text}"; // Pincode
+  }
+
+  Future<void> saveAddressAndNavigateBack() async {
+    if (!areAllFieldsFilled()) {
+      Get.snackbar(
+        'Error',
+        'Please fill all required fields!',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    String? userId = storage.read('userId');
+    if (userId == null || userId.isEmpty) {
+      Get.snackbar(
+        'Error',
+        'User ID is not available.',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      return;
+    }
+
+    try {
+      int id = await AddressDatabaseHelper().saveAddress(
+        userId: userId,
+        fullName: fullNameController.text.trim(),
+        mobileNumber: mobileNumberController.text.trim(),
+        addressLine1: addressLine1Controller.text.trim(),
+        addressLine2: addressLine2Controller.text.trim(),
+        landmark: landmarkController.text.trim().isNotEmpty
+            ? landmarkController.text.trim()
+            : null,
+        city: cityController.text.trim(),
+        state: stateController.text.trim(),
+        pincode: pincodeController.text.trim(),
+        addressType: addressTypeSave,
+      );
+
+      if (id > 0) {
+        Get.snackbar(
+          'Success',
+          'Address saved successfully!',
+          snackPosition: SnackPosition.TOP,
+          duration: const Duration(seconds: 2),
+        );
+
+        /// Delay navigation until the snackbar is shown
+        await Future.delayed(const Duration(milliseconds: 300));
+        if (mounted) {
+          Navigator.pop(
+              context, true); // Using `Navigator.pop` for more reliability
+        }
+      } else {
+        Get.snackbar(
+          'Error',
+          'Failed to save address!',
+          snackPosition: SnackPosition.BOTTOM,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'An unexpected error occurred: $e',
+        snackPosition: SnackPosition.BOTTOM,
+      );
+      debugPrint('Error in saving address: $e');
+    }
   }
 
   @override
@@ -54,6 +118,7 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
     double screenHeight = MediaQuery.of(context).size.height;
 
     bool allFieldsFilled = areAllFieldsFilled();
+
     return Scaffold(
       appBar: AppBar(
         elevation: 24,
@@ -199,89 +264,15 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
             const SizedBox(height: 12),
             InkWell(
               onTap: () async {
-                if (allFieldsFilled) {
-                  String userId = storage.read(
-                      'userId'); // Replace with your method to fetch userId.
-
-                  int id = await AddressDatabaseHelper().saveAddress(
-                    userId: userId,
-                    fullName: fullNameController.text,
-                    mobileNumber: mobileNumberController.text,
-                    addressLine1: addressLine1Controller.text,
-                    addressLine2: addressLine2Controller.text,
-                    landmark: landmarkController.text.isNotEmpty
-                        ? landmarkController.text
-                        : null,
-                    city: cityController.text,
-                    state: stateController.text,
-                    pincode: pincodeController.text,
-                    addressType: addressTypeSave,
-                  );
-
-                  if (id > 0) {
-                    Get.snackbar('Success', 'Address saved successfully!');
-                    Get.back(); // Navigate back after saving
-                  } else {
-                    Get.snackbar('Error', 'Failed to save address!');
-                  }
-                } else {
-                  Get.snackbar('Error', 'Please fill all required fields.');
-                }
+                await saveAddressAndNavigateBack();
               },
-              child: Container(
-                width: screenWidth,
-                height: 50,
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: allFieldsFilled
-                      ? const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFFCB202D), Color(0xFFE23744)])
-                      : const LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Color(0xFFE0DCE5), Color(0xFFE0DCE5)],
-                        ),
-                ),
-                child: Center(
-                  child: Text(
-                    'Save',
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      color: const Color(0xFFFFFFFF),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
+              child: SaveButton(allFieldsFilled: allFieldsFilled),
             ),
             InkWell(
               onTap: () {
-                // Handle onTap action
                 cancelButtonDialog();
               },
-              child: Container(
-                width: screenWidth,
-                height: 50,
-                padding: const EdgeInsets.all(8),
-                margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: const Color(0xFFEAE1F7)),
-                child: Center(
-                  child: Text(
-                    'Cancel',
-                    style: GoogleFonts.outfit(
-                      fontSize: 16,
-                      color: const Color(0xFFE23744),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
+              child: CancelButton(screenWidth: screenWidth),
             ),
           ],
         ),
@@ -344,7 +335,7 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
             actions: <Widget>[
               TextButton(
                 onPressed: () {
-                  Navigator.of(context).pop(); // Close the dialog
+                  Navigator.of(context).pop();
                 },
                 child: const Text('Cancel'),
               ),
@@ -359,6 +350,82 @@ class _AddDeliveryAddressState extends State<AddDeliveryAddress> {
             ],
           );
         });
+  }
+}
+
+class SaveButton extends StatelessWidget {
+  const SaveButton({
+    super.key,
+    required this.allFieldsFilled,
+  });
+
+  final bool allFieldsFilled;
+
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    return Container(
+      width: screenWidth,
+      height: 50,
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        gradient: allFieldsFilled
+            ? const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFCB202D), Color(0xFFE23744)])
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFE0DCE5), Color(0xFFE0DCE5)],
+              ),
+      ),
+      child: Center(
+        child: Text(
+          'Save',
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            color: const Color(0xFFFFFFFF),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class CancelButton extends StatelessWidget {
+  const CancelButton({
+    super.key,
+    required this.screenWidth,
+  });
+
+  final double screenWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: screenWidth,
+      height: 50,
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(8),
+          color: const Color(0xFFEAE1F7)),
+      child: Center(
+        child: Text(
+          'Cancel',
+          style: GoogleFonts.outfit(
+            fontSize: 16,
+            color: const Color(0xFFE23744),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
   }
 }
 

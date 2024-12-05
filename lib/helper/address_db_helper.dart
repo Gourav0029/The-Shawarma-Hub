@@ -24,7 +24,8 @@ class AddressDatabaseHelper {
     return await openDatabase(
       path,
       onCreate: _onCreate,
-      version: 1,
+      onUpgrade: _onUpgrade, // Add upgrade logic
+      version: 2, // Increment version
     );
   }
 
@@ -41,10 +42,18 @@ class AddressDatabaseHelper {
     city TEXT NOT NULL,
     state TEXT NOT NULL,
     pincode TEXT NOT NULL,
-    addressType TEXT NOT NULL
+    addressType TEXT NOT NULL,
+    createdAt TEXT NOT NULL
   )
 ''');
     log('Address table created!');
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE addresses ADD COLUMN createdAt TEXT');
+      log('Added createdAt column to addresses table.');
+    }
   }
 
   Future<int> saveAddress({
@@ -72,12 +81,13 @@ class AddressDatabaseHelper {
         'state': state,
         'pincode': pincode,
         'addressType': addressType,
+        'createdAt': DateTime.now().toIso8601String(), // Add timestamp
       });
       log('Address saved with ID: $id');
       return id;
     } catch (e) {
       log('Error saving address: $e');
-      rethrow; // re-throw the error after logging
+      rethrow; // Re-throw the error after logging
     }
   }
 
@@ -92,5 +102,27 @@ class AddressDatabaseHelper {
     int rowsAffected =
         await db.delete('addresses', where: 'id = ?', whereArgs: [id]);
     log('Deleted $rowsAffected row(s) with id $id');
+  }
+
+  Future<Map<String, dynamic>?> getLastSavedAddress() async {
+    try {
+      final db = await database; // Ensure 'database' is properly initialized
+      final List<Map<String, dynamic>> result = await db.query(
+        'addresses',
+        orderBy: 'createdAt DESC', // Use the newly added 'createdAt' column
+        limit: 1, // Get only the last saved address
+      );
+
+      if (result.isNotEmpty) {
+        log('Last saved address retrieved: ${result.first}');
+        return result.first; // Return the first result
+      } else {
+        log('No saved address found in the database.');
+        return null; // Return null if no address is found
+      }
+    } catch (e) {
+      log('Error in getLastSavedAddress: $e');
+      return null; // Return null in case of an error
+    }
   }
 }
