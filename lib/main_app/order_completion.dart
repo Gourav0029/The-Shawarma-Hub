@@ -8,6 +8,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:the_shawarma_hub/controller/cart_controller.dart';
 import 'package:the_shawarma_hub/main_app/landing_page.dart';
 import 'package:http/http.dart' as http;
+import 'package:url_launcher/url_launcher.dart';
 
 class PaymentCompletion extends StatefulWidget {
   const PaymentCompletion({super.key});
@@ -62,6 +63,12 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
     }
   }
 
+  void _launchUrl(String url) async {
+    if (!await launchUrl(Uri.parse(url))) {
+      throw 'Could not launch $url';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
@@ -105,7 +112,7 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
               // Customer Information
               Container(
                 width: screenWidth,
-                height: screenWidth <= 400 ? 120 : 140,
+                //height: screenWidth <= 400 ? 120 : 140,
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(8),
@@ -169,6 +176,42 @@ class _PaymentCompletionState extends State<PaymentCompletion> {
                             fontSize: 12,
                             color: const Color(0xFF201135),
                             fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Our Socials:',
+                      style: GoogleFonts.outfit(
+                        fontSize: 16,
+                        color: const Color(0xFF201135),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Social Media and Reviews Section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: () => _launchUrl(
+                              'https://www.instagram.com/the.shawarma.hub.official/?igsh=MXgwNWp6amxoNGgydw%3D%3D#'),
+                          child: Image.asset(
+                            'assets/images/instagram.png',
+                            width: 50,
+                            height: 50,
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        GestureDetector(
+                          onTap: () => _launchUrl(
+                              'https://www.google.com/maps/place/The+Shawarma+Hub/@22.8081578,86.1986688,17z/data=!3m1!4b1!4m6!3m5!1s0x39f5e3004044075b:0xfdddfe1bce6433b2!8m2!3d22.8081578!4d86.1986688!16s%2Fg%2F11y5dz6lpl?entry=ttu&g_ep=EgoyMDI0MTIwMi4wIKXMDSoASAFQAw%3D%3D'),
+                          child: Image.asset(
+                            'assets/images/google.png',
+                            width: 50,
+                            height: 50,
                           ),
                         ),
                       ],

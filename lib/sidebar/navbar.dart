@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:the_shawarma_hub/helper/logout_helper.dart';
+import 'package:the_shawarma_hub/sidebar/add_address.dart';
 import 'package:the_shawarma_hub/sidebar/manage_address.dart';
 import 'package:http/http.dart' as http;
 
@@ -128,7 +129,7 @@ class _NavBarState extends State<NavBar> {
             ],
           ),
           ListTile(
-            leading: const Icon(Icons.add_location_alt),
+            leading: const Icon(Icons.location_on),
             title: Text(
               'Manage Delivery Address',
               style: GoogleFonts.outfit(
@@ -141,46 +142,59 @@ class _NavBarState extends State<NavBar> {
             },
           ),
           ListTile(
-            leading: const Icon(Icons.book),
+            leading: const Icon(Icons.add_location_alt),
             title: Text(
-              'Order History',
+              'Add Delivery Address',
               style: GoogleFonts.outfit(
                   fontSize: 14,
                   color: const Color(0xFF201135),
                   fontWeight: FontWeight.w500),
             ),
             onTap: () {
-              // Get.to(() => const ManageAddress());
+              Get.to(() => const AddDeliveryAddress());
             },
           ),
-          ListTile(
-            leading: const Icon(Icons.star),
-            title: Text(
-              'Favourites',
-              style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: const Color(0xFF201135),
-                  fontWeight: FontWeight.w500),
-            ),
-            onTap: () {
-              //Get.to(() => const MyOrders());
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.book),
+          //   title: Text(
+          //     'Order History',
+          //     style: GoogleFonts.outfit(
+          //         fontSize: 14,
+          //         color: const Color(0xFF201135),
+          //         fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     // Get.to(() => const ManageAddress());
+          //   },
+          // ),
+          // ListTile(
+          //   leading: const Icon(Icons.star),
+          //   title: Text(
+          //     'Favourites',
+          //     style: GoogleFonts.outfit(
+          //         fontSize: 14,
+          //         color: const Color(0xFF201135),
+          //         fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     //Get.to(() => const MyOrders());
+          //   },
+          // ),
           //const SizedBox(height: 4),
           const Divider(),
-          ListTile(
-            leading: const Icon(Icons.help),
-            title: Text(
-              'FAQ',
-              style: GoogleFonts.outfit(
-                  fontSize: 14,
-                  color: const Color(0xFF201135),
-                  fontWeight: FontWeight.w500),
-            ),
-            onTap: () {
-              // Get.to(() => FAQPage());
-            },
-          ),
+          // ListTile(
+          //   leading: const Icon(Icons.help),
+          //   title: Text(
+          //     'FAQ',
+          //     style: GoogleFonts.outfit(
+          //         fontSize: 14,
+          //         color: const Color(0xFF201135),
+          //         fontWeight: FontWeight.w500),
+          //   ),
+          //   onTap: () {
+          //     // Get.to(() => FAQPage());
+          //   },
+          // ),
           // ListTile(
           //   leading: const Icon(Icons.help),
           //   title: Text(
